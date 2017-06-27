@@ -1,0 +1,42 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+    <bean id="httpClientConnectionManager" class=" org.apache.http.impl.conn.PoolingHttpClientConnectionManager " destroy-method="close">
+        <property name="maxTotal" value="${httpclient.maxTotal:500}"/>
+        <property name="defaultMaxPerRoute" value="${httpclient.defaultMaxPerRoute:500}"/>
+    </bean>
+
+    <bean id="httpClientBuilder" class=" org.apache.http.impl.client.HttpClientBuilder">
+        <property name="connectionManager" ref="httpClientConnectionManager"/>
+    </bean>
+
+    <bean id="httpClient" class="org.apache.http.impl.client.CloseableHttpClient"
+          factory-bean="httpClientBuilder" factory-method="build" scope="prototype">
+    </bean>
+
+    <bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig.Builder">
+        <property name="connectTimeout" value="${httpclient.connectTimeout:2000}"/>
+        <property name="connectionRequestTimeout" value="${httpclient.connectionRequestTimeout:10000}"/>
+        <property name="socketTimeout" value="${httpclient.socketTimeout:10000}"/>
+    </bean>
+
+    <bean id="requestConfig" class="org.apache.http.client.config.RequestConfig"
+          factory-bean="requestConfigBuilder" factory-method="build"/>
+
+    <bean id="TimeUnit.MILLISECONDS" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField" value="java.util.concurrent.TimeUnit.MILLISECONDS"/>
+    </bean>
+
+    <bean id="idleConnectionEvictor" class="org.apache.http.impl.client.IdleConnectionEvictor" init-method="start" destroy-method="shutdown">
+        <constructor-arg index="0" ref="httpClientConnectionManager"/>
+        <constructor-arg index="1" value="${httpclient.idleConnectionEvictor:5000}"/>
+        <constructor-arg index="2" ref="TimeUnit.MILLISECONDS"/>
+    </bean>
+
+    <bean id="httpClientApiService" class="com.helper.httpclient.service.HttpClientApiService" scope="prototype">
+        <property name="httpclient" ref="httpClient"/>
+        <property name="requestConfig" ref="requestConfig"/>
+    </bean>
+
+</beans>
