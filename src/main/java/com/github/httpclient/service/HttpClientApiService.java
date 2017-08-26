@@ -1,6 +1,6 @@
-package com.helper.httpclient.service;
+package com.github.httpclient.service;
 
-import com.helper.httpclient.bean.HttpResult;
+import com.github.httpclient.bean.HttpResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;

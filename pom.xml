@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.helper.httpclient</groupId>
+    <groupId>com.github.httpclient</groupId>
     <artifactId>spring-httpclient-helper</artifactId>
     <version>1.0.0</version>
 
@@ -23,11 +23,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
             <version>1.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+            <scope>provided</scope>
             <version>3.4</version>
         </dependency>
     </dependencies>

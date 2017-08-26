@@ -5,7 +5,7 @@
 
 #####1.将项目编译成jar包依赖到自己的工程中
 #####2.在applicationContext.xml 中引入httpclient.xml
-       <import resource="httpclient.xml"/>
+       <import resource="classpath:META-INF/httpclient.xml"/>
 #####3.集成的HttpClientApiService必须是多例的
         HttpClientApiService httpClientApiService = (HttpClientApiService) applicationContext.getBean("httpClientApiService");
         httpClientApiService.doGet(url);

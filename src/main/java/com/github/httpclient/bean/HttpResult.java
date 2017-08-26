@@ -1,4 +1,4 @@
-package com.helper.httpclient.bean;
+package com.github.httpclient.bean;
 
 /**
  * 这是一个httpclient POST请求返回的结果bean
