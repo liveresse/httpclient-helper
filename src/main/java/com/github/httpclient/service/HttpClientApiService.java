@@ -131,6 +131,7 @@ public class HttpClientApiService {
     public HttpResult doPostJson(String url, String json) throws IOException {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setConfig(this.requestConfig);
+        httpPost.setHeader("Content-Type","application/json");
         if (StringUtils.isNotBlank(json)) {
             StringEntity stringEntity = new StringEntity(json, "UTF-8");
             httpPost.setEntity(stringEntity);
