@@ -7,6 +7,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -131,7 +132,7 @@ public class HttpClientApiService {
     public HttpResult doPostJson(String url, String json) throws IOException {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setConfig(this.requestConfig);
-        httpPost.setHeader("Content-Type","application/json");
+        httpPost.setHeader("Content-Type", "application/json");
         if (StringUtils.isNotBlank(json)) {
             StringEntity stringEntity = new StringEntity(json, "UTF-8");
             httpPost.setEntity(stringEntity);
@@ -157,6 +158,38 @@ public class HttpClientApiService {
                 response.close();
             }
         }
+    }
+
+    /**
+     * 执行 HttpDelete
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param encode  编码
+     * @return HttpResult
+     * @throws IOException
+     */
+    public HttpResult doDelete(String url, Map<String, String> headers, String encode) throws IOException {
+        HttpDelete httpDelete = new HttpDelete(url);
+        if (StringUtils.isBlank(encode)) {
+            encode = "UTF-8";
+        }
+        if (!headers.isEmpty()) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpDelete.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+        CloseableHttpResponse response = null;
+        try {
+            response = httpclient.execute(httpDelete);
+            return new HttpResult(response.getStatusLine().getStatusCode(), response.getEntity() != null ? EntityUtils.toString(
+                    response.getEntity(), encode) : null);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+
     }
 
     public void setHttpclient(CloseableHttpClient httpclient) {
