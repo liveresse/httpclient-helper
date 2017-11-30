@@ -3,13 +3,9 @@ package com.github.httpclient.service;
 import com.github.httpclient.bean.HttpResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -34,163 +30,11 @@ public class HttpClientApiService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientApiService.class);
 
+    private static final String KEY_ENCODING = "UTF-8";
+
     private CloseableHttpClient httpclient;
 
     private RequestConfig requestConfig;
-
-    /**
-     * Get请求
-     *
-     * @param url URL
-     * @return 响应数据200返回响应内容, 其他返回null
-     * @throws ClientProtocolException
-     * @throws IOException
-     */
-    public String doGet(String url) throws IOException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("通过HttpClientApiService===>doGet()从后台系统获取数据 url={}", url);
-        }
-        HttpGet httpGet = new HttpGet(url);
-        httpGet.setConfig(this.requestConfig);
-        CloseableHttpResponse response = null;
-        try {
-            response = httpclient.execute(httpGet);
-            if (response.getStatusLine().getStatusCode() == 200) {
-                return EntityUtils.toString(response.getEntity(), "UTF-8");
-            }
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 有参数的Get请求
-     *
-     * @param url   URL
-     * @param param 参数
-     * @return 响应数据200返回响应内容, 其他返回null
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    public String doGet(String url, Map<String, String> param) throws IOException, URISyntaxException {
-        URIBuilder builder = new URIBuilder(url);
-        if (!CollectionUtils.isEmpty(param)) {
-            for (Map.Entry<String, String> entry : param.entrySet()) {
-                builder.addParameter(entry.getKey(), entry.getValue());
-            }
-        }
-        return doGet(builder.build().toString());
-    }
-
-    /**
-     * POST请求
-     *
-     * @param url URL
-     * @return HttpResult
-     * @throws IOException
-     */
-    public HttpResult doPost(String url) throws IOException {
-        return doPost(url, null);
-    }
-
-    /**
-     * 有参数POST请求
-     *
-     * @param url   URL
-     * @param param 参数
-     * @return HttpResult
-     * @throws IOException
-     */
-    public HttpResult doPost(String url, Map<String, String> param) throws IOException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("通过HttpClientApiService===>doPost() url={},param={}", url, param);
-        }
-        HttpPost httpPost = new HttpPost(url);
-        httpPost.setConfig(this.requestConfig);
-        if (!CollectionUtils.isEmpty(param)) {
-            List<NameValuePair> parameters = new ArrayList<NameValuePair>(0);
-            for (Map.Entry<String, String> entry : param.entrySet()) {
-                parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-            }
-            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(parameters, "UTF-8");
-            httpPost.setEntity(formEntity);
-        }
-        return getHttpResult(httpPost);
-    }
-
-    /**
-     * POST提交JSON数据
-     *
-     * @param url  URL
-     * @param json JSON数据
-     * @return HttpResult
-     * @throws IOException
-     */
-    public HttpResult doPostJson(String url, String json) throws IOException {
-        HttpPost httpPost = new HttpPost(url);
-        httpPost.setConfig(this.requestConfig);
-        httpPost.setHeader("Content-Type", "application/json");
-        if (StringUtils.isNotBlank(json)) {
-            StringEntity stringEntity = new StringEntity(json, "UTF-8");
-            httpPost.setEntity(stringEntity);
-        }
-        return getHttpResult(httpPost);
-    }
-
-    /**
-     * 执行HttpPost
-     *
-     * @param httpPost HttpPost
-     * @return HttpResult
-     * @throws IOException
-     */
-    private HttpResult getHttpResult(HttpPost httpPost) throws IOException {
-        CloseableHttpResponse response = null;
-        try {
-            response = httpclient.execute(httpPost);
-            return new HttpResult(response.getStatusLine().getStatusCode(), EntityUtils.toString(
-                    response.getEntity(), "UTF-8"));
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-        }
-    }
-
-    /**
-     * 执行 HttpDelete
-     *
-     * @param url     URL
-     * @param headers 请求头
-     * @param encode  编码
-     * @return HttpResult
-     * @throws IOException
-     */
-    public HttpResult doDelete(String url, Map<String, String> headers, String encode) throws IOException {
-        HttpDelete httpDelete = new HttpDelete(url);
-        if (StringUtils.isBlank(encode)) {
-            encode = "UTF-8";
-        }
-        if (!headers.isEmpty()) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                httpDelete.setHeader(entry.getKey(), entry.getValue());
-            }
-        }
-        CloseableHttpResponse response = null;
-        try {
-            response = httpclient.execute(httpDelete);
-            return new HttpResult(response.getStatusLine().getStatusCode(), response.getEntity() != null ? EntityUtils.toString(
-                    response.getEntity(), encode) : null);
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-        }
-
-    }
 
     public void setHttpclient(CloseableHttpClient httpclient) {
         this.httpclient = httpclient;
@@ -207,4 +51,204 @@ public class HttpClientApiService {
     public RequestConfig getRequestConfig() {
         return requestConfig;
     }
+
+    /**
+     * GET请求
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param params  请求参数
+     * @param encode  编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    public HttpResult doGet(String url, Map<String, String> headers, Map<String, String> params, String encode) throws IOException, URISyntaxException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("HttpClientApiService===>doGet()===>url={},headers={},params={},encode={}", url, headers, params, encode);
+        }
+        if (StringUtils.isBlank(encode)) {
+            encode = KEY_ENCODING;
+        }
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setConfig(this.requestConfig);
+        if (!CollectionUtils.isEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpGet.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+        if (!CollectionUtils.isEmpty(params)) {
+            URIBuilder builder = new URIBuilder(url);
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                builder.addParameter(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return execute(httpGet, encode);
+
+    }
+
+    /**
+     * POST请求
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param params  请求参数
+     * @param encode  编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     */
+    public HttpResult doPost(String url, Map<String, String> headers, Map<String, String> params, String encode) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("HttpClientApiService===>doPost()===>url={},headers={},params={},encode={}", url, headers, params, encode);
+        }
+        if (StringUtils.isBlank(encode)) {
+            encode = KEY_ENCODING;
+        }
+
+        HttpPost httpPost = new HttpPost(url);
+        httpPost.setConfig(this.requestConfig);
+
+        if (!CollectionUtils.isEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpPost.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(params)) {
+            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+            }
+            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(parameters, encode);
+            httpPost.setEntity(formEntity);
+        }
+
+        return execute(httpPost, encode);
+    }
+
+    /**
+     * POST请求
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param json    JSON
+     * @param encode  编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     */
+    public HttpResult doPostRaw(String url, Map<String, String> headers, String json, String encode) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("HttpClientApiService===>doPost()===>url={},headers={},json={},encode={}", url, headers, json, encode);
+        }
+        if (StringUtils.isBlank(encode)) {
+            encode = KEY_ENCODING;
+        }
+
+        HttpPost httpPostRaw = new HttpPost(url);
+        httpPostRaw.setConfig(this.requestConfig);
+
+        if (!CollectionUtils.isEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpPostRaw.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (StringUtils.isNotBlank(json)) {
+            StringEntity stringEntity = new StringEntity(json, encode);
+            httpPostRaw.setEntity(stringEntity);
+        }
+
+        return execute(httpPostRaw, encode);
+    }
+
+    /**
+     * PUT请求
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param params  请求参数
+     * @param encode  编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     */
+    public HttpResult doPut(String url, Map<String, String> headers, Map<String, String> params, String encode) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("HttpClientApiService===>doPut()===>url={},headers={},params={},encode={}", url, headers, params, encode);
+        }
+        if (StringUtils.isBlank(encode)) {
+            encode = KEY_ENCODING;
+        }
+
+        HttpPut httpPut = new HttpPut(url);
+        httpPut.setConfig(this.requestConfig);
+
+        if (!CollectionUtils.isEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpPut.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(params)) {
+            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                BasicNameValuePair basicNameValuePair = new BasicNameValuePair(entry.getKey(), entry.getValue());
+                parameters.add(basicNameValuePair);
+            }
+            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(parameters, encode);
+            httpPut.setEntity(formEntity);
+        }
+
+        return execute(httpPut, encode);
+    }
+
+    /**
+     * DELETE请求
+     *
+     * @param url     URL
+     * @param headers 请求头
+     * @param encode  编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     */
+    public HttpResult doDelete(String url, Map<String, String> headers, String encode) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("HttpClientApiService===>doDelete()===>url={},headers={},encode={}", url, headers, encode);
+        }
+        if (StringUtils.isBlank(encode)) {
+            encode = KEY_ENCODING;
+        }
+
+        HttpDelete httpDelete = new HttpDelete(url);
+        if (!CollectionUtils.isEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                httpDelete.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+        return execute(httpDelete, encode);
+
+    }
+
+    /**
+     * 执行请求
+     *
+     * @param requestBase {@link HttpRequestBase}
+     * @param encode      编码
+     * @return {@link HttpResult}
+     * @throws IOException
+     */
+    private HttpResult execute(HttpRequestBase requestBase, String encode) throws IOException {
+        CloseableHttpResponse response = null;
+        try {
+            response = httpclient.execute(requestBase);
+            return new HttpResult(response.getStatusLine().getStatusCode(), response.getEntity() != null ? EntityUtils.toString(
+                    response.getEntity(), encode) : null);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+
+    }
+
 }
